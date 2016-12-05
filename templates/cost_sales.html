@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+
+{% block extend_css %}{% endblock %}
+
+{% block extend_js %}
+<script type="text/javascript">
+$(function(){
+  $('.data_table').dataTable({
+    aLengthMenu: [
+        [25, 50, 100, 200, -1],
+        [25, 50, 100, 200, "All"]
+    ],
+    iDisplayLength: -1,
+    // 件数切替機能 無効
+    lengthChange: true,
+    // 検索機能 無効
+    searching: true,
+    // ソート機能 無効
+    ordering: true,
+    // 情報表示 無効
+    info: true,
+    // ページング機能 無効
+    paging: true,
+    dom: 'Bfrtip',
+    buttons: [
+        'csv', 'excel'
+    ]
+
+  });
+
+  $(".datetimepicker").datetimepicker({
+    locale: "ja",
+    format : 'YYYY-MM'
+  });
+
+  $("#select_az").on("change", function(){
+
+    var val = $(this).val();
+
+    if(val == "all"){
+        $(".countries").show();
+    }else{
+        $(".countries").hide();
+        $("#"+val).show();
+    }
+
+  });
+
+});
+</script>
+{% endblock %} 
+
+{% block contents %}
+
+
+<!-- Morris.js -->
+<link rel="stylesheet" href="/css/morris.css" />
+<script type="text/javascript" src="./js/raphael-min.js"></script>
+<script type="text/javascript" src="./js/morris.min.js"></script>
+<!-- End Morris.js -->
+
+<div class="m-a-1">
+    <div id="graph" style="height: 200px;">
+    </div>                
+</div>
+
+<script type="text/javascript">
+
+var graph_data = [
+
+    {% for year_month in year_month_list %}
+    {% raw %} { {% endraw %}
+
+        date: "{{year_month}}",
+        total_cost: {{total_data[year_month]["total_cost"]}},
+        instances_sales: {{total_data[year_month]["instances_sales"]}},
+
+    {% raw %} } {% endraw %},
+    {% endfor %}
+];
+
+new Morris.Line({
+  element: 'graph',
+  data: graph_data,
+  xkey: 'date',
+  ykeys: ['total_cost', 'instances_sales'],
+  labels: ['インスタンス原価(割引適用後)', 'インスタンス売上'],
+  xLabels: 'year',
+  lineColors: ['#D58665','#0b62a4'],
+  xLabelFormat: function(date) {
+      return date.getFullYear()+'/'+(date.getMonth()+1); 
+  },
+  dateFormat: function(date) {
+      d = new Date(date);
+      return d.getFullYear()+'/'+(d.getMonth()+1); 
+  },
+});
+
+</script>
+
+<div class="col-md-12">
+    <div class="m-a-1">
+        <table class="table table-striped data_table">
+            <thead>
+                <tr>
+                    <th>年-月</th>
+                    <th>インスタンス原価</th>
+                    <th>RI原価</th>
+                    <th>トータル原価</th>
+                    <th>インスタンス売上</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                {% for year_month in year_month_list %}
+                <tr>
+                    <td>{{year_month}}</td>
+                    <td>{{total_data[year_month]["instances_cost"]}}</td>
+                    <td>{{total_data[year_month]["ri_cost"]}}</td>
+                    <td>{{total_data[year_month]["total_cost"]}}</td>
+                    <td>{{total_data[year_month]["instances_sales"]}}</td>
+                </tr>
+                {% endfor %}
+
+            </tbody>
+        </table>
+
+    </div>
+
+</div>
+
+<div class="col-md-12">
+    <div class="m-a-2">
+        <h3>国単位</h3>
+    </div>
+
+    <div class="m-a-2">
+        <select id="select_az" class="form-control col-md-2">
+            <option value="all">すべて表示する</option>
+            {% for az in az_list %}
+            <option value="{{az}}">{{az}}</option>
+            {% endfor %}
+        </select>
+        <br />
+        <br />
+        <br />
+
+    </div>
+
+    {% for az in az_list %}
+    <div id="{{az}}" class="m-a-2 countries">
+        <div class="m-a-2">
+            <h4>{{az}}</h4>
+        </div>
+
+        <div class="m-a-1">
+            <div id="graph_{{az}}" style="height: 200px;">
+            </div>                
+        </div>
+
+        <script type="text/javascript">
+
+        var graph_data = [
+
+            {% for year_month in year_month_list %}
+            {% raw %} { {% endraw %}
+
+                date: "{{year_month}}",
+                total_cost: {{data[az][year_month]["total_cost"]}},
+                instances_sales: {{data[az][year_month]["instances_sales"]}},
+
+            {% raw %} } {% endraw %},
+            {% endfor %}
+        ];
+
+        new Morris.Line({
+          element: 'graph_{{az}}',
+          data: graph_data,
+          xkey: 'date',
+          ykeys: ['total_cost', 'instances_sales'],
+          labels: ['インスタンス原価(割引適用後)', 'インスタンス売上'],
+          xLabels: 'year',
+          lineColors: ['#D58665','#0b62a4'],
+          xLabelFormat: function(date) {
+              return date.getFullYear()+'/'+(date.getMonth()+1); 
+          },
+          dateFormat: function(date) {
+              d = new Date(date);
+              return d.getFullYear()+'/'+(d.getMonth()+1); 
+          },
+        });
+
+        </script>
+
+        <div class="m-a-1">
+            <table id="data_table" class="table table-striped data_table">
+                <thead>
+                    <tr>
+                        <th>年-月</th>
+                        <th>インスタンス原価</th>
+                        <th>RI原価</th>
+                        <th>トータル原価</th>
+                        <th>インスタンス売上</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    {% for year_month in year_month_list %}
+                    <tr>
+                        <td>{{year_month}}</td>
+                        <td>{{data[az][year_month]["instances_cost"]}}</td>
+                        <td>{{data[az][year_month]["ri_cost"]}}</td>
+                        <td>{{data[az][year_month]["total_cost"]}}</td>
+                        <td>{{data[az][year_month]["instances_sales"]}}</td>
+                    </tr>
+                    {% endfor %}
+
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+    {% endfor %}
+
+</div>
+
+
+
+
+{% endblock %}
+
+

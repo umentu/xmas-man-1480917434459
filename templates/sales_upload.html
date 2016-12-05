@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block extend_css %}{% endblock %}
+
+{% block extend_js %}
+<script type="text/javascript">
+$(function(){
+  $('#data_table').dataTable({
+    aLengthMenu: [
+        [25, 50, 100, 200, -1],
+        [25, 50, 100, 200, "All"]
+    ],
+    iDisplayLength: -1,
+    scrollX: true,
+    // 縦スクロールバーを有効にする (scrollYは200, "200px"など「最大の高さ」を指定します)
+    scrollY: 500,
+
+    // 件数切替機能 無効
+    lengthChange: true,
+    // 検索機能 無効
+    searching: true,
+    // ソート機能 無効
+    ordering: true,
+    // 情報表示 無効
+    info: true,
+    // ページング機能 無効
+    paging: true
+  });
+
+
+ $(".datetimepicker").datetimepicker({
+    locale: "ja",
+    format : 'YYYY-MM'
+  });
+
+  $('input[id=lefile]').on("change", function() {
+    $('#csv_text').val($(this).val());
+  });
+
+});
+
+
+</script>
+{% endblock %} 
+
+
+{% block contents %}
+
+<div class="m-a-3">
+    <form action="/sales_upload_csv" method="POST" accept-charset="utf-8" enctype="multipart/form-data">
+        
+        <input type="text" name="upload_date"  class="form-control col-md-5 datetimepicker" placeholder="アップロードする請求書の月を指定してください。" />
+
+        <br />
+        <br />
+
+        <input id="lefile" type="file" name="csv" style="display:none">
+        <div class="input-group col-md-3">
+            <input type="text" id="csv_text" class="form-control" placeholder="select CSV file...">
+            <span class="input-group-btn">
+                <button type="button" class="btn btn-info" onclick="$('input&#91;id=lefile&#93;').click();">File Select</button>
+            </span>
+        </div>
+        <br />
+        
+        <input type="submit" name="submit" value="アップロード" class="form-control col-md-2 btn btn-danger"  />
+            
+    </form>
+
+    <br />
+    <br />
+    <br />
+
+</div>
+<div class="m-a-3">
+
+    <div class="m-a-2">
+        <h3>データ表示</h3>
+    </div>
+    {% if status == "ok" %}
+    <div class="alert alert-info" role="alert">
+    更新しました。
+    </div>
+    {% endif %}
+    
+    <div class="m-a-2">
+        <div class="m-a-1">
+
+            <form action="./sales_upload" method="GET" accept-charset="utf-8">
+                <input type="text" name="select_date" class="form-control col-md-5 datetimepicker" placeholder="表示する月を選択してください。" value="" />
+                <br />
+                <br />
+
+                <input type="submit" name="submit" value="表示する" class="form-control btn btn-success col-md-2" />
+            </form>
+            <br />
+            <br />
+            <br />
+
+        </div>
+        <div class="m-a-1">
+            <h3>
+            {{date}}
+            </h3>
+        </div>
+        <div class="m-a-1">
+            <h4> 
+            総額
+            </h4>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>AWS利用料($)</th>
+                        <th>AWS利用料・定価($)</th>
+                        <th>合計-通信料-その他</th>
+                        <th>その他($)</th>
+                        <th>合計金額($)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{total_price_list["BlendedCost"]}}</td>
+                        <td>{{total_price_list["UnblendedCost"]}}</td>
+                        <td>{{total_price_list["OtherCost1"]}}</td>
+                        <td>{{total_price_list["OtherCost2"]}}</td>
+                        <td>{{total_price_list["TotalCost"]}}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+        <div class="m-a-1">
+            <h4> 
+            内訳
+            </h4>
+
+            <table id="data_table" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>取引先担当者コード</th>
+                        <th>AWSアカウントID</th>
+                        <th>リソースID</th>
+                        <th>アベイラビリティーゾーン</th>
+                        <th>インスタンスタイプ</th>
+                        <th>OS</th>
+                        <th>AWS利用料($)</th>
+                        <th>AWS利用料・定価($)</th>
+                        <th>合計-通信料-その他</th>
+                        <th>その他($)</th>
+                        <th>合計金額($)</th>
+                        <th>起動時間</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dt in data %}
+                    <tr>
+                        <td>{{dt["Code"]}}</td>
+                        <td>{{dt["AccountId"]}}</td>
+                        <td>{{dt["ResourceId"]}}</td>
+                        <td>{{dt["AvailabilityZone"]}}</td>
+                        <td>{{dt["InstanceType"]}}</td>
+                        <td>{{dt["OperatingSystem"]}}</td>
+                        <td>{{dt["BlendedCost"] | round(2)}}</td>
+                        <td>{{dt["UnblendedCost"]| round(2)}}</td>
+                        <td>{{dt["OtherCost1"]| round(2)}}</td>
+                        <td>{{dt["OtherCost2"]| round(2)}}</td>
+                        <td>{{dt["TotalCost"]| round(2)}}</td>
+                        <td>{{dt["Intervals"]}}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+</div>
+{% endblock %}
+
+

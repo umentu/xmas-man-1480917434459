@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block extend_css %}{% endblock %}
+
+{% block extend_js %}
+<script type="text/javascript">
+$(function(){
+  $('.data_table').dataTable({
+    aLengthMenu: [
+        [25, 50, 100, 200, -1],
+        [25, 50, 100, 200, "All"]
+    ],
+    iDisplayLength: -1,
+    // 件数切替機能 無効
+    lengthChange: true,
+    // 検索機能 無効
+    searching: true,
+    // ソート機能 無効
+    ordering: true,
+    // 情報表示 無効
+    info: true,
+    // ページング機能 無効
+    paging: true,
+    dom: 'Bfrtip',
+    buttons: [
+        'csv', 'excel'
+    ]
+  });
+
+  $(".datetimepicker").datetimepicker({
+    locale: "ja",
+    format : 'YYYY-MM-DD HH:mm:ss'
+  });
+
+  $("#select_month").on("change", function(){
+
+    var val = $(this).val();
+    if( val == "all" ){
+        $(".month_list").show();
+    }else{
+        $(".month_list").hide();
+        $("#" + val).show();
+    }
+
+  });
+
+
+
+});
+</script>
+{% endblock %} 
+
+
+{% block contents %}
+
+<div class="m-a-2"> 
+    <select id="select_month" class="form-control col-md-2">
+        <option value="all">すべて表示</option>
+        {% for year_month in year_month_list %}
+        <option value="{{year_month}}">{{year_month}}</option>
+        option
+        {% endfor %}
+    </select>
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+
+</div>
+
+{% for year_month in year_month_list %}
+
+<div id="{{year_month}}" class="m-a-2 month_list"> 
+
+    <div class="m-a-1">
+        <h2>{{ year_month }}</h2>
+    </div>
+
+    <div class="m-a-1 col-md-6">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <td>インスタンス総額(カウント対象)</td>
+                    <td>インスタンス総額(非カウント対象)</td>
+                    <td>RI総額</td>
+                    <td>総額</td>
+                </tr>
+            </thead>
+            <body>
+                <tr>
+                    <td>{{ "{:,}".format(total_price[year_month]["price"]) }}</td>
+                    <td>{{ "{:,}".format(total_price[year_month]["nc_price"]) }}</td>
+                    <td>{{ "{:,}".format(total_price[year_month]["ri_price"]) }}</td>
+                    <td>{{ "{:,}".format(total_price[year_month]["total_price"]) }}</td>
+                </tr>                
+        </table>
+    </div>
+
+    <div class="m-a-1">
+        
+        <table class="table table-striped data_table">
+            <thead>
+                <tr>
+                    <th style="white-space: nowrap;">InstanceType</th>
+                    <th style="white-space: nowrap;">OperatingSystem</th>
+                    <th style="white-space: nowrap;">AvailabilityZone</th>
+                    <th style="white-space: nowrap;">Interval - target</th>
+                    <th style="white-space: nowrap;">Interval - non-target</th>
+                    <th style="white-space: nowrap;">Interval - total</th>
+                    <th style="white-space: nowrap;">Instances - target</th>
+                    <th style="white-space: nowrap;">Instances - non-target</th>
+                    <th style="white-space: nowrap;">Instances - total</th>
+                    <th style="white-space: nowrap;">Price - target</th>
+                    <th style="white-space: nowrap;">Price - non-target</th>
+                    <th style="white-space: nowrap;">Price - total</th>
+                    <th style="white-space: nowrap;">RI - Instances</th>
+                    <th style="white-space: nowrap;">RI - Price</th>
+                    <th style="white-space: nowrap;">Total Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for instance_type in data[year_month] %}
+                <tr>
+                    
+                    <td>{{instance_type}}</td>
+                    <td>{{data[year_month][instance_type]["os"]}}</td>
+                    <td>{{data[year_month][instance_type]["az"]}}</td>
+                    <td>{{data[year_month][instance_type]["intervals"]}}</td>
+                    <td>{{data[year_month][instance_type]["nc_intervals"]}}</td>
+                    <td>{{data[year_month][instance_type]["total_intervals"]}}</td>
+                    <td>{{data[year_month][instance_type]["instances"]}}</td>
+                    <td>{{data[year_month][instance_type]["nc_instances"]}}</td>
+                    <td>{{data[year_month][instance_type]["total_instances"]}}</td>
+                    <td>{{data[year_month][instance_type]["price"]}}</td>
+                    <td>{{data[year_month][instance_type]["nc_price"]}}</td>
+                    <td>{{data[year_month][instance_type]["total_price"]}}</td>
+                    <td>{{data[year_month][instance_type]["ri_instances"]}}</td>
+                    <td>{{data[year_month][instance_type]["ri_price"]}}</td>
+                    <td>{{data[year_month][instance_type]["total_all_price"]}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+
+
+</div>
+{% endfor %}
+{% endblock %}
+
+

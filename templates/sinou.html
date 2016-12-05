@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block extend_css %}{% endblock %}
+
+{% block extend_js %}
+<script>
+$(function(){
+  $('#data_table').dataTable({
+    aLengthMenu: [
+        [25, 50, 100, 200, -1],
+        [25, 50, 100, 200, "All"]
+    ],
+    iDisplayLength: -1    
+  });
+});
+</script>
+{% endblock %} 
+
+
+{% block contents %}
+
+<table id="data_table" class="table table-striped">
+  <thead>
+    <tr>
+      <th nowrap="true">時間</th>
+      <th nowrap="true">地域</th>
+      <th nowrap="true">マグニチュード</th>
+      <th nowrap="true">北緯</th>
+      <th nowrap="true">東経</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for d in data %}
+  <tr>
+    <td nowrap="true">{{d[2]}}</td>
+    <td nowrap="true">{{d[3]}}</td>
+    <td nowrap="true">{{d[4]}}</td>
+    <td nowrap="true">{{d[5]}}</td>
+    <td>{{d[6]}}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}
+
+

@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block extend_css %}{% endblock %}
+
+{% block extend_js %}
+<script type="text/javascript">
+$(function(){
+    $('.data_table').dataTable({
+        aLengthMenu: [
+                [25, 50, 100, 200, -1],
+                [25, 50, 100, 200, "All"]
+        ],
+        iDisplayLength: -1,
+        scrollX: true,
+        // 縦スクロールバーを有効にする (scrollYは200, "200px"など「最大の高さ」を指定します)
+        scrollY: 500,
+        // 件数切替機能 無効
+        lengthChange: true,
+        // 検索機能 無効
+        searching: true,
+        // ソート機能 無効
+        ordering: true,
+        // 情報表示 無効
+        info: true,
+        // ページング機能 無効
+        paging: true
+    });
+
+    $(".datetimepicker").datetimepicker({
+        locale: "ja",
+        format : 'YYYY-MM-DD HH:mm:ss'
+    });
+
+    $("#instance_type").on("change", function(){
+
+        var instance_type = $(this).val();
+
+        if(instance_type == "none"){
+            return;
+        }
+
+        location.href = "./instance_type?instance_type=" + instance_type; 
+
+    });
+
+});
+</script>
+{% endblock %} 
+
+
+{% block contents %}
+<div class="m-a-3">
+        <select name="instance_type" id="instance_type" class="form-control col-md-2">
+
+                <option value="none">---選択して下さい---</option>}
+                <option value="all">すべて</option>}
+                {% for instance_type in instance_type_list %}
+                <option value="{{instance_type}}">{{instance_type}}</option>
+                {% endfor %}
+        </select>
+        <br />
+        <br />
+</div>
+{% for instance_type in data %}
+<div>
+        <div class="m-a-3"> 
+                <h2>
+                        {{ instance_type }}
+                </h2>
+        </div>
+
+        {% for availability_zone in data[instance_type] %}
+        <div class="m-a-2"> 
+                <h3>
+                        {{ availability_zone }}
+                </h3>
+
+                <table id="data_table" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th style="white-space: nowrap;" rowspan="2">年-月</th>
+                            <th style="white-space: nowrap;" colspan="2">Linux</th>
+                            <th style="white-space: nowrap;" colspan="2">UNIX/Linux</th>
+                            <th style="white-space: nowrap;" colspan="2">Windows</th>
+                            <th style="white-space: nowrap;" colspan="2">RHEL</th>
+                        </tr>
+                        <tr>
+                            <th>RI</th>
+                            <th>OI</th>
+                            <th>RI</th>
+                            <th>OI</th>
+                            <th>RI</th>
+                            <th>OI</th>
+                            <th>RI</th>
+                            <th>OI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for usage_month in data[instance_type][availability_zone] %}
+                        <tr>
+                                <td style="white-space: nowrap;">{{usage_month[0]}}</td>
+                                <td style="white-space: nowrap;">{{usage_month[1]["Linux/UNIX"]["RI"]}}</td>
+                                <td style="white-space: nowrap;">{{usage_month[1]["Linux/UNIX"]["OI"]}}</td>
+                                <td style="white-space: nowrap;">{{usage_month[1]["Windows"]["RI"]}}</td>
+                                <td style="white-space: nowrap;">{{usage_month[1]["Windows"]["OI"]}}</td>
+                                <td style="white-space: nowrap;">{{usage_month[1]["RHEL"]["RI"]}}</td>
+                                <td style="white-space: nowrap;">{{usage_month[1]["RHEL"]["OI"]}}</td>
+                                <td style="white-space: nowrap;">{{usage_month[1]["SUSE Linux"]["RI"]}}</td>
+                                <td style="white-space: nowrap;">{{usage_month[1]["SUSE Linux"]["OI"]}}</td>
+                        </tr>                                
+                        {% endfor %}
+                    </tbody>
+                </table>
+        </div>
+        {% endfor %}
+
+</div>
+
+{% endfor %}
+
+{% endblock %}
+
+

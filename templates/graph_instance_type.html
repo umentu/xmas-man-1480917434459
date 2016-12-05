@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block extend_css %}{% endblock %}
+
+{% block extend_js %}
+<script type="text/javascript">
+$(function(){
+  $('.data_table').dataTable({
+    aLengthMenu: [
+        [25, 50, 100, 200, -1],
+        [25, 50, 100, 200, "All"]
+    ],
+    iDisplayLength: -1,
+    scrollX: true,
+    // 縦スクロールバーを有効にする (scrollYは200, "200px"など「最大の高さ」を指定します)
+    scrollY: 300,
+    // 件数切替機能 無効
+    lengthChange: true,
+    // 検索機能 無効
+    searching: true,
+    // ソート機能 無効
+    ordering: true,
+    // 情報表示 無効
+    info: true,
+    // ページング機能 無効
+    paging: true
+  });
+
+  $(".datetimepicker").datetimepicker({
+        locale: "ja",
+        format : 'YYYY-MM'
+   });
+
+});
+</script>
+{% endblock %} 
+
+
+{% block contents %}
+
+<!-- Morris.js -->
+<link rel="stylesheet" href="/css/morris.css" />
+<script type="text/javascript" src="./js/raphael-min.js"></script>
+<script type="text/javascript" src="./js/morris.min.js"></script>
+<!-- End Morris.js -->
+
+<div class="m-a-2"> 
+    <form action="/graph_instance_type" method="GET" accept-charset="utf-8">
+        <input type="text" name="fd" id="fd" class="datetimepicker form-control col-md-2 m-a-1" placeholder="UsageStartDateの開始日時" />&nbsp;&nbsp;&nbsp;
+        <input type="text" name="td" id="td" class="datetimepicker form-control col-md-2 m-a-1" placeholder="UsageEndDateの終了日日時" />&nbsp;&nbsp;&nbsp;
+        <input type="submit" name="submit" class="form-control col-md-1 m-a-1" value="送信" />    
+    </form>
+    <br />
+    <br />
+    <br />
+</div>
+
+<div>
+    <div class="m-a-3 col-md-12">
+        <h2>{{search_date}}</h2>
+        <h3>総インスタンス数: {{ instance_list | length}}</h3>
+    </div>
+
+
+    <div class="m-a-3 col-md-12 container-fluid">
+
+        {% for cls in class_list %}
+
+        <div class="col-md-12">
+
+            <h3>{{cls}}</h3>
+
+            {% for cls_type in class_type_list[cls] %}
+            <div>
+                <h4>{{cls_type[0]}}</h4>
+                <div id="graph_{{cls_type[0]}}">
+                </div>
+
+                <script type="text/javascript">
+
+                var graph_interval_data = [
+
+
+                    {% for year_month in year_month_list %}
+                    {% for year_month_day in year_month_day_list[year_month] %}
+                    
+                    {% raw %} { {% endraw %}
+                        date: "{{year_month_day}}", 
+                        {% for instance_type in cls_type[1] %}
+                        {% if graph_data[year_month_day] %}
+                        {% if graph_data[year_month_day][instance_type] %}
+
+                        "{{ instance_type }}" : {{graph_data[year_month_day][instance_type] | length}},
+                        {% else %}
+                        "{{ instance_type }}" : 0,
+                        {% endif %}
+                        {% else %}
+                        "{{ instance_type }}" : 0,
+                        {% endif %}
+                        {% endfor %}
+                    {% raw %} } {% endraw %},
+                    
+                    {% endfor %}
+                    {% endfor %}
+                    
+                ];
+
+                new Morris.Line({
+                  element: 'graph_{{cls_type[0]}}',
+                  data: graph_interval_data,
+                  xkey: 'date',
+                  ykeys: [{% for it in cls_type[1] %} "{{it}}", {% endfor %} ],
+                  labels: [{% for it in cls_type[1] %} "{{it}}", {% endfor %} ],
+                  xLabels: 'day',
+                  xLabelFormat: function(date) {
+                      return date.getFullYear()+'/'+(date.getMonth()+1)+'/'+date.getDate(); 
+                  },
+                  dateFormat: function(date) {
+                      d = new Date(date);
+                      return d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate(); 
+                  },
+                });
+
+                </script>
+
+                <table class="table table-striped data_table">
+                    <thead>
+                        <tr>
+                            <th>InstanceType</th>
+                            {% for year_month in year_month_list %}
+                            {% for month_day in month_day_list[year_month] %}
+                            <th>{{month_day}}</th>
+                            {% endfor %}
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for instance_type in cls_type[1] %}
+                    <tr>
+                        <td>{{instance_type}}</td>
+                            {% for year_month in year_month_list %}
+                            {% for month_day in month_day_list[year_month] %}
+                        <td>{{ data[instance_type][month_day] | length }}</td>
+                            {% endfor %}
+                            {% endfor %}
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endfor %}  
+
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+{% endblock %}
+
+

@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block extend_css %}{% endblock %}
+
+{% block extend_js %}
+<script type="text/javascript">
+$(function(){
+  $('#data_table').dataTable({
+    aLengthMenu: [
+        [25, 50, 100, 200, -1],
+        [25, 50, 100, 200, "All"]
+    ],
+    iDisplayLength: -1,
+    // 件数切替機能 無効
+    lengthChange: true,
+    // 検索機能 無効
+    searching: true,
+    // ソート機能 無効
+    ordering: true,
+    // 情報表示 無効
+    info: true,
+    // ページング機能 無効
+    paging: true
+  });
+
+  $(".datetimepicker").datetimepicker({
+    locale: "ja",
+    format : 'YYYY-MM-DD HH:mm:ss'
+  });
+
+});
+</script>
+{% endblock %} 
+
+
+{% block contents %}
+
+<!-- Morris.js -->
+<link rel="stylesheet" href="/css/morris.css" />
+<script type="text/javascript" src="./js/raphael-min.js"></script>
+<script type="text/javascript" src="./js/morris.min.js"></script>
+<!-- End Morris.js -->
+
+<div class="p-a-4"> 
+    
+    <div class="p-a-2">    
+
+        <h2>月別総額</h2>
+    </div>
+    <div class="p-a-1">
+        <div id="graph" style="height:200px;">
+        </div>
+    </div>
+    <script type="text/javascript">
+
+            var graph_instance_data = [
+
+                {% for year_month in year_month_list %}
+                {% raw %} { {% endraw %}                
+                "date": "{{year_month}}",
+                "price": {{ monthly_total_price_list[year_month] }}
+                {% raw %} }, {% endraw %}
+                {% endfor %}
+            ];
+            new Morris.Line({
+              element: "graph",
+              data: graph_instance_data,
+              xkey: 'date',
+              ykeys: ['price'],
+              labels: ['購入額'],
+              xLabels: 'month',
+            });
+
+
+
+
+    </script>
+
+    <div class="p-a-2">
+        <table class="table table-striped">
+
+            <thead>
+                <tr>
+                    {% for year_month in year_month_list %}
+                    <th>{{year_month}}</th>
+                    {% endfor %}
+                    <th>総額</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    {% for year_month in year_month_list %}
+                    <td>{{monthly_total_price_list[year_month]}}</td>
+                    {% endfor %}
+                    <td>{{monthly_total_price_list["all_total"]}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+
+<div class="p-a-4"> 
+
+    <div class="p-a-2">    
+        <h2>詳細</h2>
+    </div>
+
+    <div class="p-a-2">    
+
+        <table id="data_table" class="table table-striped">
+            <thead>
+                <tr>
+                    <th>InstanceType</th>
+                    <th>OS</th>
+                    <th>AvailabilityZone</th>
+                    {% for year_month in year_month_list %}
+                    <th>{{year_month}}</th>
+                    {% endfor %}
+                    <th>総額</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for instance_type in data %}
+                {% for os in data[instance_type] %}
+                {% for availability_zone in data[instance_type][os] %}
+                <tr>
+                    <td>{{instance_type}}</td>
+                    <td>{{os}}</td>
+                    <td>{{availability_zone}}</td>
+                    {% for year_month in year_month_list %}
+                    <td>{{data[instance_type][os][availability_zone][year_month]}}</td>
+                    {% endfor %}        
+                    <td>{{data[instance_type][os][availability_zone]["total"]}}</td>
+                </tr>
+                {% endfor %}
+                {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}

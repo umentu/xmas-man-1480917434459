@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block extend_css %}{% endblock %}
+{% block extend_js %}
+<script type="text/javascript">
+
+$('#data_table').dataTable({
+  "language": {
+   "url": "./js/Japanese.json"
+  }
+});
+
+</script>
+{% endblock %} 
+
+
+{% block contents %}
+
+<table id="data_table" class="table table-striped">
+    <thead>
+        <tr>
+            <th>名前</th>
+            <th>メールアドレス</th>
+            <th>電話番号</th>
+            <th>住所</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>高橋忠雄</td>
+            <td>mail@mail.com</td>
+            <td>019-232-12323</td>
+            <td>東京都豊島区</td>
+
+        </tr>
+        <tr>
+            <td>中島</td>
+            <td>tatada@mail.com</td>
+            <td>019-232-12323</td>
+            <td>福島県</td>
+
+        </tr>
+        <tr>
+            <td>ジョン</td>
+            <td>mail@mail.com</td>
+            <td>019-232-12323</td>
+            <td>アメリカ</td>
+
+        </tr>
+        <tr>
+            <td>F</td>
+            <td>mail@mail.com</td>
+            <td>019-232-12323</td>
+            <td>東京都江戸川区</td>
+
+        </tr>
+        <tr>
+            <td>ケネディ</td>
+            <td>abc@abcmail.com</td>
+            <td>0123-232-12323</td>
+            <td>京都府</td>
+
+        </tr>
+        <tr>
+            <td>田中</td>
+            <td>234@m2342ail.com</td>
+            <td>019-232-12323</td>
+            <td>福岡県</td>
+
+        </tr>
+        <tr>
+            <td>ザビエル</td>
+            <td>mail43234@m223323ail.com</td>
+            <td>01923-232-234</td>
+            <td>北海道</td>
+
+        </tr>
+
+    </tbody>
+</table>
+
+{% endblock %}

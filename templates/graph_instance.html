@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block extend_css %}{% endblock %}
+
+{% block extend_js %}
+<script type="text/javascript">
+$(function(){
+  $('.data_table').dataTable({
+    aLengthMenu: [
+        [25, 50, 100, 200, -1],
+        [25, 50, 100, 200, "All"]
+    ],
+    iDisplayLength: -1,
+    scrollX: true,
+    // 縦スクロールバーを有効にする (scrollYは200, "200px"など「最大の高さ」を指定します)
+    scrollY: 500,
+    // 件数切替機能 無効
+    lengthChange: true,
+    // 検索機能 無効
+    searching: true,
+    // ソート機能 無効
+    ordering: true,
+    // 情報表示 無効
+    info: true,
+    // ページング機能 無効
+    paging: true
+  });
+
+  $(".datetimepicker").datetimepicker({
+        locale: "ja",
+        format : 'YYYY-MM'
+   });
+});
+</script>
+{% endblock %} 
+
+
+{% block contents %}
+
+<!-- Morris.js -->
+<link rel="stylesheet" href="/css/morris.css" />
+<script type="text/javascript" src="./js/raphael-min.js"></script>
+<script type="text/javascript" src="./js/morris.min.js"></script>
+<!-- End Morris.js -->
+
+<div class="m-a-2"> 
+    <form action="/graph_instance" method="GET" accept-charset="utf-8">
+        <input type="text" name="fd" id="fd" class="datetimepicker form-control col-md-2 m-a-1" placeholder="UsageStartDateの開始日時" />&nbsp;&nbsp;&nbsp;
+        <input type="text" name="td" id="td" class="datetimepicker form-control col-md-2 m-a-1" placeholder="UsageEndDateの終了日日時" />&nbsp;&nbsp;&nbsp;
+        <input type="submit" name="submit" class="form-control col-md-1 m-a-1" value="送信" />    
+    </form>
+    <br />
+    <br />
+    <br />
+</div>
+
+{% for cls in class_list %}
+{% for cls_type in class_type_list[cls] %}
+{% for instance_type in cls_type[1] %}
+
+<div>
+    <div class="m-a-3 col-md-12">
+        <h2>{{instance_type}} </h2>
+        <h3>総稼働時間: {{total_stating_time_list[instance_type]}}</h3>
+    </div>
+    <div class="m-a-3 col-md-12 container-fluid">
+        <div class="col-md-12">
+            
+            <div class="m-a-1">
+                <span class="label label-primary">起動インスタンス数</span>
+                <div id="graph_{{instance_type | replace('.', '_')}}_instance" style="height: 200px;">
+                </div>                
+            </div>
+
+            <div class="m-a-1">
+                <span class="label label-primary">起動時間</span><br />      
+                <div id="graph_{{instance_type | replace('.', '_')}}_interval" style="height: 200px;">
+                </div>
+
+            </div>
+
+            <script type="text/javascript">
+
+            var graph_count_data = [
+
+                {% for year_month in year_month_list %}
+                {% for year_month_day in year_month_day_list[year_month] %}
+                {% raw %} { {% endraw %}
+
+                    {% if graph_data[instance_type][year_month_day] %}
+                    date: "{{year_month_day}}", 
+                    instance: {{graph_data[instance_type][year_month_day]["instance"]|length}},
+                    {% else%}
+                    date: "{{year_month_day}}", 
+                    instance: 0,
+                    {% endif %}
+
+                {% raw %} } {% endraw %},
+                {% endfor %}
+                {% endfor %}
+            ];
+
+            new Morris.Line({
+              element: 'graph_{{instance_type | replace('.', '_')}}_instance',
+              data: graph_count_data,
+              xkey: 'date',
+              ykeys: ['instance'],
+              labels: ['インスタンス数'],
+              xLabels: 'day',
+              xLabelFormat: function(date) {
+                  return date.getFullYear()+'/'+(date.getMonth()+1)+'/'+date.getDate(); 
+              },
+              dateFormat: function(date) {
+                  d = new Date(date);
+                  return d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate(); 
+              },
+            });
+
+            var graph_interval_data = [
+
+                {% for year_month in year_month_day_list %}
+                {% for year_month_day in year_month_day_list[year_month] %}
+                {% raw %} { {% endraw %}
+
+                    {% if graph_data[instance_type][year_month_day] %}
+                    date: "{{year_month_day}}", 
+                    interval: {{graph_data[instance_type][year_month_day]["interval"]}}                    
+                    {% else%}
+                    date: "{{year_month_day}}", 
+                    interval: 0
+                    {% endif %}
+
+                {% raw %} } {% endraw %},
+                {% endfor %}
+                {% endfor %}
+            ];
+
+            new Morris.Line({
+              element: 'graph_{{instance_type | replace('.', '_')}}_interval',
+              data: graph_interval_data,
+              xkey: 'date',
+              ykeys: ['interval'],
+              labels: ['起動時間'],
+              xLabels: 'day',
+              xLabelFormat: function(date) {
+                  return date.getFullYear()+'/'+(date.getMonth()+1)+'/'+date.getDate(); 
+              },
+              dateFormat: function(date) {
+                  d = new Date(date);
+                  return d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate(); 
+              },
+            });
+
+
+            </script>
+
+        </div>        
+        <div class="col-md-12">
+            <table class="table table-striped data_table">
+                <thead>
+                    <tr>
+                        <th>ResourceId</th>
+                        <th>OS</th>
+                        <th>AvailabilityZone</th>
+                        {% for year_month in year_month_list %}
+                        {% for year_month_day in year_month_day_list[year_month] %}
+                        <th>{{year_month_day}}</th>
+                        {% endfor %}
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                {% for resource_id in data[instance_type] %}
+
+
+                {% for os in data[instance_type][resource_id] %}
+                {% for availability_zone in data[instance_type][resource_id][os] %}
+                    <tr>
+                        <td>{{resource_id}}</td>
+                        <td>{{os}}</td>
+                        <td>{{availability_zone}}</td>
+
+                        {% for year_month in year_month_list %}
+                        {% for year_month_day in year_month_day_list[year_month] %}
+                        
+                        {% if data[instance_type][resource_id][os][availability_zone][year_month_day]%}
+                        <td>{{data[instance_type][resource_id][os][availability_zone][year_month_day]}}</td>
+                        {% else %}
+                        <td>0</td>
+                        {% endif %}
+                        
+
+                        {% endfor %}
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                {% endfor %}
+                {% endfor %}
+                </tbody>
+            </table>        
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endfor %}
+{% endfor %}
+
+</div>
+{% endblock %}
+
+

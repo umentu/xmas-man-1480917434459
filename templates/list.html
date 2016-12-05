@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block extend_css %}{% endblock %}
+
+{% block extend_js %}
+<script type="text/javascript">
+$(function(){
+  $('#data_table').dataTable({
+    aLengthMenu: [
+        [25, 50, 100, 200, -1],
+        [25, 50, 100, 200, "All"]
+    ],
+    iDisplayLength: -1,
+    scrollX: true,
+    // 縦スクロールバーを有効にする (scrollYは200, "200px"など「最大の高さ」を指定します)
+    scrollY: 500,
+    // 件数切替機能 無効
+    lengthChange: true,
+    // 検索機能 無効
+    searching: true,
+    // ソート機能 無効
+    ordering: true,
+    // 情報表示 無効
+    info: true,
+    // ページング機能 無効
+    paging: true
+  });
+
+  $(".datetimepicker").datetimepicker({
+    locale: "ja",
+    format : 'YYYY-MM-DD HH:mm:ss'
+  });
+
+});
+</script>
+{% endblock %} 
+
+
+{% block contents %}
+<div class="m-a-2"> 
+    <form action="/" method="GET" accept-charset="utf-8">
+        <input type="text" name="fd" id="fd" class="datetimepicker form-control col-md-2 m-a-1" placeholder="UsageStartDateの開始日時" />&nbsp;&nbsp;&nbsp;
+        <input type="text" name="td" id="td" class="datetimepicker form-control col-md-2 m-a-1" placeholder="UsageEndDateの終了日日時" />&nbsp;&nbsp;&nbsp;
+        <input type="submit" name="submit" class="form-control col-md-1 m-a-1" value="送信" />    
+    </form>
+    <br />
+    <br />
+    <br />
+</div>
+
+<div class="m-a-2"> 
+    <h2>
+        {{ term }}
+    </h2>
+</div>
+
+<div class="m-a-2"> 
+
+
+    <table id="data_table" class="table table-striped">
+        <thead>
+            <tr>
+                <th style="white-space: nowrap;">InvoiceID</th>
+                <th style="white-space: nowrap;">PayerAccountId</th>
+                <th style="white-space: nowrap;">LinkedAccountId</th>
+                <th style="white-space: nowrap;">RecordType</th>
+                <th style="white-space: nowrap;">RecordId</th>
+                <th style="white-space: nowrap;">ProductName</th>
+                <th style="white-space: nowrap;">RateId</th>
+                <th style="white-space: nowrap;">SubscriptionId</th>
+                <th style="white-space: nowrap;">PricingPlanId</th>
+                <th style="white-space: nowrap;">UsageType</th>
+                <th style="white-space: nowrap;">Operation</th>
+                <th style="white-space: nowrap;">AvailabilityZone</th>
+                <th style="white-space: nowrap;">ReservedInstance</th>
+                <th style="white-space: nowrap;">ItemDescription</th>
+                <th style="white-space: nowrap;">UsageStartDate</th>
+                <th style="white-space: nowrap;">UsageEndDate</th>
+                <th style="white-space: nowrap;">UsageQuantity</th>
+                <th style="white-space: nowrap;">BlendedRate</th>
+                <th style="white-space: nowrap;">BlendedCost</th>
+                <th style="white-space: nowrap;">UnBlendedRate</th>
+                <th style="white-space: nowrap;">UnBlendedCost</th>
+                <th style="white-space: nowrap;">ResourceId</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            {% for dt in data %}
+            <tr>
+
+              {% for d in dt%}
+              <td style="white-space: nowrap;">{{d}}</td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
+
+

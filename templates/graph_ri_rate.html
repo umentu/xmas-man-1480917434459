@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+
+{% block extend_css %}{% endblock %}
+
+{% block extend_js %}
+<script type="text/javascript">
+$(function(){
+  $('.data_table').dataTable({
+    aLengthMenu: [
+        [25, 50, 100, 200, -1],
+        [25, 50, 100, 200, "All"]
+    ],
+    iDisplayLength: -1,
+    scrollX: true,
+    // 縦スクロールバーを有効にする (scrollYは200, "200px"など「最大の高さ」を指定します)
+    scrollY: 300,
+    // 件数切替機能 無効
+    lengthChange: true,
+    // 検索機能 無効
+    searching: true,
+    // ソート機能 無効
+    ordering: true,
+    // 情報表示 無効
+    info: true,
+    // ページング機能 無効
+    paging: true
+  });
+
+  $(".datetimepicker").datetimepicker({
+        locale: "ja",
+        format : 'YYYY-MM',
+    });
+
+  $("#select_class").on("change", function(){
+
+        var id = $(this).val();
+
+        if( id == "all") {
+            $(".classes").show();
+        }else{
+            $(".classes").hide();
+            $("#"+ id).show();
+        }
+  });
+
+});
+</script>
+{% endblock %} 
+
+
+{% block contents %}
+
+<!-- Morris.js -->
+<link rel="stylesheet" href="/css/morris.css" />
+<script type="text/javascript" src="./js/raphael-min.js"></script>
+<script type="text/javascript" src="./js/morris.min.js"></script>
+<!-- End Morris.js -->
+
+<div class="m-a-2"> 
+    <form action="/graph_ri_rate" method="GET" accept-charset="utf-8">
+        <input type="text" name="fd" id="fd" class="datetimepicker form-control col-md-2 m-a-1" placeholder="UsageStartDateの開始日時" />&nbsp;&nbsp;&nbsp;
+        <input type="text" name="td" id="td" class="datetimepicker form-control col-md-2 m-a-1" placeholder="UsageEndDateの終了日日時" />&nbsp;&nbsp;&nbsp;
+        <input type="submit" name="submit" class="form-control col-md-1 m-a-1" value="送信" />    
+    </form>
+    <br />
+    <br />
+    <br />
+</div>
+
+
+<div class="m-a-2"> 
+
+    <select id="select_class" class="form-control col-md-2">
+        <option value="all">すべてを表示</option>
+        {% for cls in class_list %} 
+        <option value="{{cls}}">{{cls}}</option>
+        {% endfor %}
+    </select>
+    <br />
+    <br />
+
+</div>
+
+
+<div class="m-a-3">
+    <h2>{{ from_date }} - {{ to_date }}</h2>    
+    <h2>{{last_collect}}</h2>
+</div>
+
+{% for cls in class_list %} 
+<div id="{{cls}}" class="classes">
+    <h2>{{cls}}</h2>
+    {% for cls_type in class_type_list[cls] %}
+    <div class="m-a-3 col-md-12">
+        <div class="m-a-2">
+            <h2>{{ cls_type[0] }}</h2>
+        </div>
+
+        {% for instance_type in cls_type[1] %}
+        <div class="m-a-1">
+            <h3>{{instance_type}}</h3>
+
+            {% for os in data[instance_type] %}
+            <h4>{{os}}</h4>
+            {% for availability_zone in data[instance_type][os] %}
+            <h5>{{availability_zone}}</h5>
+            <div class="m-a-1">
+                <div id="graph_{{instance_type | replace('.', '_')}}_{{os | replace('.', '_') | replace('/', '') | replace(' ', '')}}_{{availability_zone}}_instance" style="height:200px;">
+                </div>
+            </div>
+
+
+            <div class="m-a-1">
+                <div id="graph_{{instance_type | replace('.', '_')}}_{{os | replace('.', '_') | replace('/', '') | replace(' ', '')}}_{{availability_zone}}_interval" style="height:200px;">
+                </div>
+            </div>
+
+            <script type="text/javascript">
+
+            var graph_instance_data = [
+
+                {% for year_month in year_month_list %}
+                {% for year_month_day in year_month_day_list[year_month] %}
+                {% raw %} { {% endraw %}
+
+                    {% if data[instance_type][os][availability_zone][year_month_day] %}
+                    date: "{{year_month_day}}", 
+                    instances: {{data[instance_type][os][availability_zone][year_month_day]["instances"]}},
+                    ri_instances: {{data[instance_type][os][availability_zone][year_month_day]["ri_instances"]}},
+
+                        {% if instance_type in ri_instance_list %}
+                        {% if os in ri_instance_list[instance_type] %}
+                        {% if availability_zone in ri_instance_list[instance_type][os] %}
+                        ri_available: {{ri_instance_list[instance_type][os][availability_zone][year_month_day]}}
+                        {% else%}
+                        ri_available: 0
+                        {% endif %}
+                        {% else%}
+                        ri_available: 0
+                        {% endif %}
+                        {% else%}
+                        ri_available: 0
+                        {% endif %}
+                    {% else%}
+                    date: "{{year_month_day}}", 
+                    instances: 0,
+                    ri_instances: 0,
+                    {% if instance_type in ri_instance_list %}
+                    {% if os in ri_instance_list[instance_type] %}
+                    {% if availability_zone in ri_instance_list[instance_type][os] %}
+                    ri_available: {{ri_instance_list[instance_type][os][availability_zone][year_month_day]}}
+                    {% else%}
+                    ri_available: 0
+                    {% endif %}
+                    {% else%}
+                    ri_available: 0
+                    {% endif %}
+                    {% else%}
+                    ri_available: 0
+                    {% endif %}
+
+                    {% endif %}
+
+                {% raw %} } {% endraw %},
+                {% endfor %}
+                {% endfor %}
+            ];
+
+            new Morris.Line({
+              element: "graph_{{instance_type | replace('.', '_')}}_{{os | replace('.', '_') | replace('/', '') | replace(' ', '')}}_{{ availability_zone}}_instance",
+              data: graph_instance_data,
+              xkey: 'date',
+              ykeys: ['instances', 'ri_instances', 'ri_available'],
+              labels: ['実インスタンス数', '実RI数', '購入RI数'],
+              xLabels: 'day',
+            });
+
+
+            var graph_interval_data = [
+
+                {% for year_month in year_month_list %}
+                {% for year_month_day in year_month_day_list[year_month] %}
+                {% raw %} { {% endraw %}
+
+                    {% if data[instance_type][os][availability_zone][year_month_day] %}
+                    date: "{{year_month_day}}", 
+                    intervals: {{data[instance_type][os][availability_zone][year_month_day]["intervals"]}},
+                    ri_intervals: {{data[instance_type][os][availability_zone][year_month_day]["ri_intervals"]}},
+
+                        {% if instance_type in ri_instance_list %}
+                        {% if os in ri_instance_list[instance_type] %}
+                        {% if availability_zone in ri_instance_list[instance_type][os] %}
+                        ri_available_intervals: {{ri_instance_list[instance_type][os][availability_zone][year_month_day] * 24}}
+                        {% else %}
+                        ri_available_intervals: 0
+                        {% endif %}
+                        {% else%}
+                        ri_available_intervals: 0
+                        {% endif %}
+                        {% else%}
+                        ri_available_intervals: 0
+                        {% endif %}
+                    {% else%}
+                    date: "{{year_month_day}}", 
+                    intervals: 0,
+                    ri_intervals: 0,
+
+                        {% if instance_type in ri_instance_list %}
+                        {% if os in ri_instance_list[instance_type] %}
+                        {% if availability_zone in ri_instance_list[instance_type][os] %}
+                        ri_available_intervals: {{ri_instance_list[instance_type][os][availability_zone][year_month_day] * 24}}
+                        {% else %}
+                        ri_available_intervals: 0
+                        {% endif %}
+                        {% else%}
+                        ri_available_intervals: 0
+                        {% endif %}
+                        {% else%}
+                        ri_available_intervals: 0
+                        {% endif %}
+                    {% endif %}
+
+                {% raw %} } {% endraw %},
+                {% endfor %}
+                {% endfor %}
+            ];
+
+            new Morris.Line({
+              element: "graph_{{instance_type | replace('.', '_')}}_{{os | replace('.', '_') | replace('/', '') | replace(' ', '')}}_{{ availability_zone}}_interval",
+              data: graph_interval_data,
+              xkey: 'date',
+              ykeys: ['intervals', 'ri_intervals', 'ri_available_intervals'],
+              labels: ['実インスタンス使用時間', '実RI使用時間', '購入RI使用可能時間'],
+              xLabels: 'day',
+            });
+
+
+
+            </script>
+            
+
+            {% endfor %}
+            {% endfor %}
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+    {% endfor %}
+</div>
+{% endfor %}
+
+{% endblock %}

@@ -1,0 +1,26 @@
+.main {
+    margin-top: 100px;
+}
+
+.center-block {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+// Usage as a mixin
+.element {
+  @include center-block;
+}
+
+.title = {
+    margin: 20px;
+}
+
+.subtitle = {
+    margin: 10px;
+}
+
+.alert-hidden {
+    visibility: hidden;
+}
