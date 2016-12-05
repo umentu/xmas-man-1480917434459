@@ -16,6 +16,6 @@ try:
     print("Start serving at port %i" % PORT)
     httpd.serve_forever()
 except KeyboardInterrupt as e:
-  pass
+    pass
 httpd.server_close()
 
