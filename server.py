@@ -13,7 +13,7 @@ os.chdir('static')
 
 httpd = Server(("", PORT), Handler)
 try:
-  print("Start serving at port %i" % PORT)
+  print("fooooooooooo")
   httpd.serve_forever()
 except KeyboardInterrupt:
   pass
